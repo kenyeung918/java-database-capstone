@@ -27,7 +27,7 @@ public class DashboardController {
     @GetMapping("/adminDashboard/{token}")
     public String adminDashboard(@PathVariable String token) {
         // Validate the token using the shared service for the "admin" role
-        Map<String, String> validationResult = service.validateToken(token, "admin");
+        Map<String, String> validationResult = (Map<String, String>) service.validateToken(token, "admin");
         
         // If the token is valid (i.e., no errors returned)
         if (validationResult.isEmpty()) {

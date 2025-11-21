@@ -304,4 +304,9 @@ public class Patient {
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
     }
+
+    public Object getRegistrationDate() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getRegistrationDate'");
+    }
 }
