@@ -1,28 +1,56 @@
-/* this is the style sheet file for index.htlm  */
+/* this is the style sheet file for index.html */
 
 /* 
 **Global Reset (`*`)**
 
 * Remove all default margin and padding.
 * Use `border-box` for sizing to include padding and border in element size.
+*/
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
 
+/* 
 **Base (`html, body`)**
 
 * Set height to 100% for full viewport layout.
 * Use the `'Roboto'` sans-serif font for modern, clean typography.
+*/
+html, body {
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
 
+/* 
 **Layout Wrapper (`.wrapper`)**
 
 * Use a vertical flexbox layout.
 * Ensure the wrapper covers at least the full height of the screen (`min-height: 100vh`).
+*/
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-**Heading (`h2`)**
+/* Header Styles */
+.header {
+    background-color: #015c5d;
+    color: white;
+    padding: 1rem 2rem;
+}
 
-* Set a large font size (`48px`) for prominence.
-* Add a bottom margin of `50px` for spacing.
-* Use a dark teal color (`#003e3e`).
-* Make the font bold and use a blended font stack (`'Alegreya', 'Roboto', sans-serif`) for elegant styling.
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
 
+/* 
 **Main Section (`.main-content`)**
 
 * Allow the section to grow to fill space with `flex-grow: 1`.
@@ -36,7 +64,89 @@
   * `center` positioning
   * no repeat
   * `fixed` attachment to keep image still during scroll
+*/
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    background-image: url('../images/background/medical-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
 
+/* 
+**Heading (`h2`)**
+
+* Set a large font size (`48px`) for prominence.
+* Add a bottom margin of `50px` for spacing.
+* Use a dark teal color (`#003e3e`).
+* Make the font bold and use a blended font stack (`'Alegreya', 'Roboto', sans-serif`) for elegant styling.
+*/
+.role-selection-heading {
+    font-size: 48px;
+    margin-bottom: 50px;
+    color: #003e3e;
+    font-weight: bold;
+    font-family: 'Alegreya', 'Roboto', sans-serif;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+/* Role Buttons Container */
+.role-buttons-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Role Button Styles */
+.role-btn {
+    background-color: #015c5d;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 2rem;
+    width: 100%;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    min-height: 200px;
+}
+
+.role-btn:hover {
+    background-color: #A62B1F;
+    transform: translateY(-5px);
+}
+
+.role-icon {
+    font-size: 3rem;
+}
+
+.role-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.role-description {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+/* 
 **Buttons (`button`)**
 
 * Style with a teal green background (`#015c5d`) and white text.
@@ -45,9 +155,145 @@
 * Add a top margin of `10px` for spacing.
 * Enable pointer cursor and readable font size (`16px`).
 * On hover, change background color to bold red (`#A62B1F`).
+*/
+button:not(.role-btn) {
+    background-color: #015c5d;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    width: 200px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+    transition: background-color 0.3s ease;
+}
 
+button:not(.role-btn):hover {
+    background-color: #A62B1F;
+}
+
+/* 
 **Dashboard Buttons (`.dashboard-btn`)**
 
 * Use the same base green background (`#015c5d`) as the default button.
 * On hover, darken the background to deep teal (`#003e3e`) for visual feedback.
- */
+*/
+.dashboard-btn {
+    background-color: #015c5d;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    width: 200px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.dashboard-btn:hover {
+    background-color: #003e3e;
+}
+
+/* Footer Styles */
+.footer {
+    background-color: #003e3e;
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #003e3e;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    color: #003e3e;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #015c5d;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .role-selection-heading {
+        font-size: 36px;
+        margin-bottom: 30px;
+    }
+    
+    .role-buttons-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .role-btn {
+        padding: 1.5rem;
+        min-height: 150px;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .role-selection-heading {
+        font-size: 28px;
+    }
+    
+    .role-text {
+        font-size: 1.2rem;
+    }
+    
+    .role-icon {
+        font-size: 2rem;
+    }
+}

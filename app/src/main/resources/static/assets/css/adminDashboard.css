@@ -1,4 +1,4 @@
-/*this is the style sheet for the adminDashboard. */
+/* this is the style sheet for the adminDashboard. */
 
 /* 
 Global Reset (`*`)
@@ -9,7 +9,14 @@ Global Reset (`*`)
   * `margin: 0` — removes default outer spacing from all elements.
   * `padding: 0` — removes default inner spacing.
   * `box-sizing: border-box` — ensures padding and borders are included within the total width/height of elements.
+*/
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
 
+/* 
 Base HTML & Body (`html, body`)
 
 * Purpose: Establish a full-height layout and apply a standard font across the page.
@@ -17,7 +24,13 @@ Base HTML & Body (`html, body`)
 
   * `height: 100%` — allows containers to stretch to the full viewport height.
   * `font-family: Arial, sans-serif` — applies a clean, readable sans-serif font.
+*/
+html, body {
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
 
+/* 
 Main Layout Wrapper (`.wrapper`)
 
 * Purpose: Create a flexible, vertical layout that fills the entire screen.
@@ -26,7 +39,35 @@ Main Layout Wrapper (`.wrapper`)
   * `display: flex` — enables flexbox for layout control.
   * `flex-direction: column` — stacks children vertically.
   * `min-height: 100vh` — ensures the wrapper always covers full screen height.
+*/
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
+/* Admin Header */
+.admin-header {
+    background-color: #003e3e;
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.admin-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-welcome {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* 
 Section Heading (`h2`)
 
 * Purpose: Style the headings prominently for section separation.
@@ -36,7 +77,23 @@ Section Heading (`h2`)
   * `font-weight: bold` — emphasizes text.
   * `margin-bottom: 50px` — creates space below the heading.
   * `color: #003e3e` — uses a strong teal for visual anchoring.
+*/
+.dashboard-heading {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 50px;
+    color: #003e3e;
+}
 
+.section-heading {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #003e3e;
+    text-align: left;
+}
+
+/* 
 Main Content Section (`.main-content`)
 
 * Purpose: Layout the main content with padding and a background image.
@@ -51,7 +108,58 @@ Main Content Section (`.main-content`)
   * `background-position: center` — centers the image.
   * `background-repeat: no-repeat` — avoids tiling the image.
   * `background-attachment: fixed` — fixes the image while scrolling.
+*/
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    background-image: url("../images/defineRole/index.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
 
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #003e3e;
+    margin-bottom: 1rem;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #A62B1F;
+    margin-bottom: 1rem;
+}
+
+.card-description {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* 
 Primary Button (`button`)
 
 * Purpose: Design prominent, interactive buttons for main actions.
@@ -71,7 +179,28 @@ Primary Button (`button`)
 * On Hover:
 
   * Retains the same red background to maintain branding.
+*/
+button {
+    background-color: #A62B1F;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    width: 200px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    transition: all 0.3s ease;
+}
 
+button:hover {
+    background-color: #A62B1F; /* Same color maintained for branding */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(166, 43, 31, 0.3);
+}
+
+/* 
 Admin Button (`.adminBtn`)
 
 * Purpose: Provide a secondary button style for admin-specific actions.
@@ -89,6 +218,111 @@ Admin Button (`.adminBtn`)
 * On Hover**:
 
    Changes text color to `#A62B1F` for brand consistency while keeping the background same.
-
-
 */
+.adminBtn {
+    background-color: #f4f4f4;
+    color: #333;
+    font-weight: bold;
+    width: 110px;
+    padding: 10px 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    margin: 5px;
+}
+
+.adminBtn:hover {
+    color: #A62B1F;
+    background-color: #f4f4f4; /* Background remains the same */
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+/* Admin Tables */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-table th {
+    background-color: #003e3e;
+    color: white;
+    font-weight: bold;
+}
+
+.admin-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Footer */
+.admin-footer {
+    background-color: #003e3e;
+    color: white;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-heading {
+        font-size: 28px;
+        margin-bottom: 30px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .main-content {
+        padding: 20px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    button {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-heading {
+        font-size: 24px;
+    }
+    
+    .section-heading {
+        font-size: 20px;
+    }
+    
+    .admin-nav {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
