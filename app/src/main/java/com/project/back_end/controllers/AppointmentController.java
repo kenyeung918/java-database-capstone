@@ -8,13 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/appointments")
 public class AppointmentController {
 
-    // 2. Autowire Dependencies:
     @Autowired
     private AppointmentService appointmentService;
     
@@ -28,15 +28,18 @@ public class AppointmentController {
             @PathVariable String patientName,
             @PathVariable String token) {
         
-        // Validate token for doctor role
-        if (!Service.validateToken(token, "doctor")) {
+        // FIXED: Call instance method, not static method
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(token, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
         try {
-            List<Appointment> appointments = appointmentService.getAppointment(date, patientName);
-            return ResponseEntity.ok(appointments);
+            // FIXED: Convert date string to LocalDate and use correct method signature
+            LocalDate appointmentDate = LocalDate.parse(date);
+            Map<String, Object> result = appointmentService.getAppointments(patientName, appointmentDate, token);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error retrieving appointments: " + e.getMessage());
@@ -44,27 +47,37 @@ public class AppointmentController {
     }
 
     // 4. Define the `bookAppointment` Method:
-    @PostMapping("/{token}")
+    @PostMapping("/book")
     public ResponseEntity<?> bookAppointment(
-            @PathVariable String token,
+            @RequestHeader("Authorization") String token,
             @RequestBody Appointment appointment) {
         
-        // Validate token for patient role
-        if (!service.validateToken(token, "patient")) {
+        // FIXED: Extract token from Authorization header and validate
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "patient");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
-        // Validate appointment data
-        if (!service.validateAppointment(appointment)) {
+        // FIXED: validateAppointment returns int, not boolean
+        int validationResult = service.validateAppointment(appointment);
+        if (validationResult != 1) {
+            String errorMessage = validationResult == -1 ? "Doctor not found" : "Appointment time not available";
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid appointment data.");
+                    .body("Invalid appointment data: " + errorMessage);
         }
         
         try {
-            Appointment bookedAppointment = appointmentService.bookAppointment(appointment);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Appointment booked successfully with ID: " + bookedAppointment.getId());
+            // FIXED: bookAppointment returns int, not Appointment
+            int result = appointmentService.bookAppointment(appointment);
+            if (result == 1) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body("Appointment booked successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Failed to book appointment");
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error booking appointment: " + e.getMessage());
@@ -72,20 +85,23 @@ public class AppointmentController {
     }
 
     // 5. Define the `updateAppointment` Method:
-    @PutMapping("/{token}")
+    @PutMapping("/update")
     public ResponseEntity<?> updateAppointment(
-            @PathVariable String token,
+            @RequestHeader("Authorization") String token,
             @RequestBody Appointment appointment) {
         
-        // Validate token for patient role
-        if (!service.validateToken(token, "patient")) {
+        // FIXED: Extract token from Authorization header
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "patient");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
         try {
-            Appointment updatedAppointment = appointmentService.updateAppointment(appointment);
-            return ResponseEntity.ok("Appointment updated successfully: " + updatedAppointment.getId());
+            // FIXED: updateAppointment returns ResponseEntity, not Appointment
+            ResponseEntity<Map<String, String>> result = appointmentService.updateAppointment(appointment);
+            return result;
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error updating appointment: " + e.getMessage());
@@ -93,28 +109,77 @@ public class AppointmentController {
     }
 
     // 6. Define the `cancelAppointment` Method:
-    @DeleteMapping("/{id}/{token}")
+    @DeleteMapping("/cancel/{id}")
     public ResponseEntity<?> cancelAppointment(
             @PathVariable Long id,
-            @PathVariable String token) {
+            @RequestHeader("Authorization") String token) {
         
-        // Validate token for patient role
-        if (!service.validateToken(token, "patient")) {
+        // FIXED: Extract token from Authorization header
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "patient");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
         try {
-            boolean cancelled = appointmentService.cancelAppointment(id);
-            if (cancelled) {
-                return ResponseEntity.ok("Appointment cancelled successfully.");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Appointment not found or already cancelled.");
-            }
+            // FIXED: cancelAppointment returns ResponseEntity, not boolean
+            ResponseEntity<Map<String, String>> result = appointmentService.cancelAppointment(id, cleanToken);
+            return result;
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error cancelling appointment: " + e.getMessage());
         }
+    }
+
+    // Additional endpoints
+
+    @GetMapping("/patient/{token}")
+    public ResponseEntity<?> getPatientAppointments(@RequestHeader("Authorization") String token) {
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "patient");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // You might want to add this method to your Service class
+            ResponseEntity<Map<String, Object>> result = service.filterPatient(null, null, cleanToken);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving patient appointments: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/status/{appointmentId}/{newStatus}")
+    public ResponseEntity<?> changeAppointmentStatus(
+            @PathVariable Long appointmentId,
+            @PathVariable int newStatus,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            ResponseEntity<Map<String, String>> result = appointmentService.changeStatus(appointmentId, newStatus);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error changing appointment status: " + e.getMessage());
+        }
+    }
+
+    // Helper method to extract token from Authorization header
+    private String extractTokenFromHeader(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return authHeader; // Return as-is if no Bearer prefix
     }
 }

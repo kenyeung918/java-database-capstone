@@ -6,7 +6,6 @@ import com.project.back_end.models.Patient;
 import com.project.back_end.repo.AppointmentRepository;
 import com.project.back_end.repo.DoctorRepository;
 import com.project.back_end.repo.PatientRepository;
-import com.project.back_end.services.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,40 +22,46 @@ import java.util.Optional;
 @Service
 public class AppointmentService {
 
-    // 2. Constructor Injection for Dependencies
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final TokenService tokenService;
-    private final Service validationService;
-
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository,
                             PatientRepository patientRepository,
                             DoctorRepository doctorRepository,
-                            TokenService tokenService,
-                            Service validationService) {
+                            TokenService tokenService) {
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.tokenService = tokenService;
-        this.validationService = validationService;
     }
 
     // 4. Book Appointment Method
     @Transactional
     public int bookAppointment(Appointment appointment) {
         try {
-            // Save the new appointment to the database
-            Appointment savedAppointment = appointmentRepository.save(appointment);
+            // FIXED: Use the correct validation method
+            boolean isAvailable = checkAppointmentAvailability(
+                appointment.getDoctor().getId(), 
+                appointment.getAppointmentTime()
+            );
             
-            // If save operation fails, return 0; otherwise, return 1
+            if (!isAvailable) {
+                return 0; // Time slot not available
+            }
+            
+            // Set default status if not provided
+            if (appointment.getStatus() == null) {
+                appointment.setStatus(Appointment.STATUS_SCHEDULED);
+            }
+            
+            Appointment savedAppointment = appointmentRepository.save(appointment);
             return savedAppointment != null ? 1 : 0;
             
         } catch (Exception e) {
-            // Handle any exceptions and return appropriate result code
             System.err.println("Error booking appointment: " + e.getMessage());
-            return 0;
+            return -1;
         }
     }
 
@@ -66,7 +71,6 @@ public class AppointmentService {
         Map<String, String> response = new HashMap<>();
         
         try {
-            // Check if appointment exists before updating
             Optional<Appointment> existingAppointmentOpt = appointmentRepository.findById(appointment.getId());
             
             if (!existingAppointmentOpt.isPresent()) {
@@ -76,47 +80,40 @@ public class AppointmentService {
             
             Appointment existingAppointment = existingAppointmentOpt.get();
             
-            // Validate whether the patient ID matches
             if (!existingAppointment.getPatient().getId().equals(appointment.getPatient().getId())) {
                 response.put("error", "Patient ID mismatch - unauthorized to update this appointment");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
-            // Check if the appointment is available for updating (not completed)
-            if (existingAppointment.getStatus() == 1) { // Assuming 1 = Completed
+            if (existingAppointment.getStatus() == Appointment.STATUS_COMPLETED) {
                 response.put("error", "Cannot update completed appointment");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             
-            // Ensure that the doctor is available at the specified time
-            int validationResult = ((Object) validationService).validateAppointment(
-                appointment.getDoctor().getId(), 
-                appointment.getAppointmentTime()
-            );
-            
-            if (validationResult != 1) {
-                if (validationResult == -1) {
-                    response.put("error", "Doctor not found");
-                } else {
+            // Check if the new time slot is available (if time is being changed)
+            if (!existingAppointment.getAppointmentTime().equals(appointment.getAppointmentTime())) {
+                boolean isAvailable = checkAppointmentAvailability(
+                    appointment.getDoctor().getId(), 
+                    appointment.getAppointmentTime()
+                );
+                
+                if (!isAvailable) {
                     response.put("error", "Doctor not available at the specified time");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             
-            // Update appointment fields
             existingAppointment.setAppointmentTime(appointment.getAppointmentTime());
             existingAppointment.setDoctor(appointment.getDoctor());
             existingAppointment.setStatus(appointment.getStatus());
+            existingAppointment.setNotes(appointment.getNotes());
             
-            // Save the updated appointment
             appointmentRepository.save(existingAppointment);
             
-            // Return success message
             response.put("message", "Appointment updated successfully");
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            // Handle errors and return appropriate error message
             System.err.println("Error updating appointment: " + e.getMessage());
             response.put("error", "Failed to update appointment: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -129,7 +126,6 @@ public class AppointmentService {
         Map<String, String> response = new HashMap<>();
         
         try {
-            // Find the appointment by ID
             Optional<Appointment> appointmentOpt = appointmentRepository.findById(id);
             
             if (!appointmentOpt.isPresent()) {
@@ -139,8 +135,7 @@ public class AppointmentService {
             
             Appointment appointment = appointmentOpt.get();
             
-            // Extract patient information from token
-            String patientEmail = tokenService.getUsernameFromToken(token);
+            String patientEmail = tokenService.extractIdentifier(token);
             Patient patient = patientRepository.findByEmail(patientEmail);
             
             if (patient == null) {
@@ -148,21 +143,23 @@ public class AppointmentService {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
-            // Ensure the patient who owns the appointment is trying to cancel it
             if (!appointment.getPatient().getId().equals(patient.getId())) {
                 response.put("error", "Unauthorized to cancel this appointment");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             
-            // Delete the appointment from the database
-            appointmentRepository.delete(appointment);
+            if (!appointment.canBeCancelled()) {
+                response.put("error", "Appointment cannot be cancelled (less than 2 hours before)");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
             
-            // Return success message
+            appointment.setStatus(Appointment.STATUS_CANCELLED);
+            appointmentRepository.save(appointment);
+            
             response.put("message", "Appointment cancelled successfully");
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            // Handle possible errors
             System.err.println("Error cancelling appointment: " + e.getMessage());
             response.put("error", "Failed to cancel appointment: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -175,8 +172,7 @@ public class AppointmentService {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Extract doctor information from token
-            String doctorEmail = tokenService.getUsernameFromToken(token);
+            String doctorEmail = tokenService.extractIdentifier(token);
             Doctor doctor = doctorRepository.findByEmail(doctorEmail);
             
             if (doctor == null) {
@@ -184,23 +180,19 @@ public class AppointmentService {
                 return response;
             }
             
-            // Calculate start and end of day for the given date
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
             
             List<Appointment> appointments;
             
             if (pname != null && !pname.trim().isEmpty()) {
-                // Filter by patient name if provided
                 appointments = appointmentRepository.findByDoctorIdAndPatient_NameContainingIgnoreCaseAndAppointmentTimeBetween(
                     doctor.getId(), pname, startOfDay, endOfDay);
             } else {
-                // Get all appointments for the doctor on the specific date
                 appointments = appointmentRepository.findByDoctorIdAndAppointmentTimeBetween(
                     doctor.getId(), startOfDay, endOfDay);
             }
             
-            // Return map containing the list of appointments
             response.put("appointments", appointments);
             response.put("count", appointments.size());
             response.put("date", date.toString());
@@ -220,15 +212,21 @@ public class AppointmentService {
         Map<String, String> response = new HashMap<>();
         
         try {
-            // Check if appointment exists
             Optional<Appointment> appointmentOpt = appointmentRepository.findById(appointmentId);
             if (!appointmentOpt.isPresent()) {
                 response.put("error", "Appointment not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             
-            // Update the status of the appointment
-            appointmentRepository.updateStatus(newStatus, appointmentId);
+            Appointment appointment = appointmentOpt.get();
+            
+            if (!isValidStatusTransition(appointment.getStatus(), newStatus)) {
+                response.put("error", "Invalid status transition");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            appointment.setStatus(newStatus);
+            appointmentRepository.save(appointment);
             
             response.put("message", "Appointment status updated successfully");
             return ResponseEntity.ok(response);
@@ -240,11 +238,41 @@ public class AppointmentService {
         }
     }
 
-    // Additional utility methods for enhanced functionality
+    // Helper method to validate appointment availability
+    public boolean checkAppointmentAvailability(Long doctorId, LocalDateTime appointmentTime) {
+        try {
+            Optional<Doctor> doctorOpt = doctorRepository.findById(doctorId);
+            
+            if (doctorOpt.isEmpty()) {
+                return false;
+            }
+            
+            return !appointmentRepository.existsByDoctorIdAndAppointmentTime(doctorId, appointmentTime);
+            
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
-    /**
-     * Get appointment by ID
-     */
+    // Helper method to validate status transitions
+    private boolean isValidStatusTransition(int currentStatus, int newStatus) {
+        switch (currentStatus) {
+            case Appointment.STATUS_SCHEDULED:
+                return newStatus == Appointment.STATUS_COMPLETED || 
+                       newStatus == Appointment.STATUS_CANCELLED || 
+                       newStatus == Appointment.STATUS_NO_SHOW;
+            case Appointment.STATUS_COMPLETED:
+                return false;
+            case Appointment.STATUS_CANCELLED:
+                return false;
+            case Appointment.STATUS_NO_SHOW:
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    // Additional utility methods
     @Transactional(readOnly = true)
     public ResponseEntity<?> getAppointmentById(long id) {
         try {
@@ -261,27 +289,28 @@ public class AppointmentService {
         }
     }
 
-    /**
-     * Get appointments for a specific patient
-     */
     @Transactional(readOnly = true)
     public List<Appointment> getAppointmentsByPatientId(Long patientId) {
         return appointmentRepository.findByPatientId(patientId);
     }
 
-    /**
-     * Check appointment availability
-     */
-    @Transactional(readOnly = true)
-    public boolean checkAppointmentAvailability(Long doctorId, LocalDateTime appointmentTime) {
-        return !appointmentRepository.existsByDoctorIdAndAppointmentTime(doctorId, appointmentTime);
-    }
-
-    /**
-     * Get today's appointments for a doctor
-     */
     @Transactional(readOnly = true)
     public List<Appointment> getTodayAppointments(Long doctorId) {
-        return appointmentRepository.findByDoctorIdAndAppointmentDate(doctorId, LocalDate.now());
+        return appointmentRepository.findTodayAppointmentsByDoctorId(doctorId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Appointment> getUpcomingAppointmentsByPatientId(Long patientId) {
+        return appointmentRepository.findUpcomingAppointmentsByPatientId(patientId, LocalDateTime.now());
+    }
+
+    @Transactional
+    public ResponseEntity<Map<String, String>> completeAppointment(long appointmentId) {
+        return changeStatus(appointmentId, Appointment.STATUS_COMPLETED);
+    }
+
+    @Transactional
+    public ResponseEntity<Map<String, String>> markAsNoShow(long appointmentId) {
+        return changeStatus(appointmentId, Appointment.STATUS_NO_SHOW);
     }
 }

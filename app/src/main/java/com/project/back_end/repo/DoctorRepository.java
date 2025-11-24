@@ -47,4 +47,6 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
      * @return List of doctors with the specified specialty
      */
     List<Doctor> findBySpecialtyIgnoreCase(String specialty);
+
+    List<Doctor> findByNameContainingIgnoreCase(String name);
 }

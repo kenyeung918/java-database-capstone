@@ -1,6 +1,5 @@
 package com.project.back_end.services;
 
-import com.project.back_end.services.TokenService;
 import com.project.back_end.models.Patient;
 import com.project.back_end.models.Appointment;
 import com.project.back_end.DTO.AppointmentDTO;

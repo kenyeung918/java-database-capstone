@@ -1,7 +1,7 @@
 package com.project.back_end.controllers;
 
 import com.project.back_end.models.Admin;
-import com.project.back_end.services.ValidationService;
+import com.project.back_end.services.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,10 +13,10 @@ import java.util.Map;
 public class AdminController {
 
     // 2. Autowire Service Dependency:
-    private final ValidationService validationService;
+    private final Service validationService;
 
     @Autowired
-    public AdminController(ValidationService validationService) {
+    public AdminController(Service validationService) {
         this.validationService = validationService;
     }
 

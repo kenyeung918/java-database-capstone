@@ -9,18 +9,21 @@ import java.util.List;
 @Repository
 public interface PrescriptionRepository extends MongoRepository<Prescription, String> {
 
-    // 1. Extend MongoRepository<Prescription, String> - MongoDB CRUD functionality inherited
+    // CORRECT methods based on your Prescription entity:
 
-    // 2. Custom Query Method:
-
-    /**
-     * Find prescriptions associated with a specific appointment
-     * @param appointmentId the appointment ID to search for
-     * @return List of prescriptions for the given appointment
-     */
+    // 1. Find by appointment ID - This is correct
     List<Prescription> findByAppointmentId(Long appointmentId);
 
-    List<Prescription> findByMedicationNameContainingIgnoreCase(String medicationName);
+    // 2. FIXED: Search by medication (String field)
+    List<Prescription> findByMedicationContainingIgnoreCase(String medication);
 
-    List<Prescription> findByPatientId(String patientId);
+    // 3. FIXED: Search by patient name (String field)
+    List<Prescription> findByPatientNameContainingIgnoreCase(String patientName);
+
+    // 4. Check if prescription exists for appointment - This is correct
+    boolean existsByAppointmentId(Long appointmentId);
+
+    // Additional useful methods based on your entity:
+    List<Prescription> findByIsActiveTrue();
+    List<Prescription> findByPatientName(String patientName);
 }

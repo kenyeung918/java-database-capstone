@@ -88,4 +88,8 @@ public class Login {
     public int hashCode() {
         return java.util.Objects.hash(identifier, password);
     }
+
+    public String getEmail() {        
+        throw new UnsupportedOperationException("Unimplemented method 'getEmail'");
+    }
 }

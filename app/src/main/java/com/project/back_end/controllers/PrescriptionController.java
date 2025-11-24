@@ -11,70 +11,224 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("${api.path}" + "prescription")
+@RequestMapping("/prescription")
 public class PrescriptionController {
 
-    // 2. Autowire Dependencies:
     @Autowired
     private PrescriptionService prescriptionService;
     
     @Autowired
     private Service service;
 
-    // 3. Define the `savePrescription` Method:
-    @PostMapping("/{token}")
+    /**
+     * Save prescription
+     */
+    @PostMapping
     public ResponseEntity<?> savePrescription(
             @RequestBody Prescription prescription,
-            @PathVariable String token) {
+            @RequestHeader("Authorization") String token) {
         
-        // Validate token for doctor role
-        if (!service.validateToken(token, "doctor")) {
+        // FIXED: Extract token from header and validate properly
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
         try {
-            // Save prescription using prescriptionService
-            Prescription savedPrescription = prescriptionService.savePrescription(prescription);
-            
-            if (savedPrescription != null) {
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body("Prescription saved successfully with ID: " + savedPrescription.getId());
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Failed to save prescription");
-            }
+            // FIXED: savePrescription returns ResponseEntity, not Prescription
+            ResponseEntity<Map<String, String>> result = prescriptionService.savePrescription(prescription);
+            return result;
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error saving prescription: " + e.getMessage());
         }
     }
 
-    // 4. Define the `getPrescription` Method:
-    @GetMapping("/{appointmentId}/{token}")
+    /**
+     * Get prescription by appointment ID
+     */
+    @GetMapping("/{appointmentId}")
     public ResponseEntity<?> getPrescription(
             @PathVariable Long appointmentId,
-            @PathVariable String token) {
+            @RequestHeader("Authorization") String token) {
         
-        // Validate token for doctor role
-        if (!service.validateToken(token, "doctor")) {
+        // FIXED: Extract token from header
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid or expired token. Access denied.");
         }
         
         try {
-            // Get prescription by appointment ID
-            Prescription prescription = prescriptionService.getPrescription(appointmentId);
-            
-            if (prescription != null) {
-                return ResponseEntity.ok(prescription);
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("No prescription found for appointment ID: " + appointmentId);
-            }
+            // FIXED: getPrescription returns ResponseEntity, not Prescription
+            ResponseEntity<Map<String, Object>> result = prescriptionService.getPrescription(appointmentId);
+            return result;
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error retrieving prescription: " + e.getMessage());
         }
+    }
+
+    /**
+     * Update prescription
+     */
+    @PutMapping("/{prescriptionId}")
+    public ResponseEntity<?> updatePrescription(
+            @PathVariable String prescriptionId,
+            @RequestBody Prescription prescription,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: updatePrescription returns ResponseEntity
+            ResponseEntity<Map<String, String>> result = prescriptionService.updatePrescription(prescriptionId, prescription);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating prescription: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Delete prescription
+     */
+    @DeleteMapping("/{prescriptionId}")
+    public ResponseEntity<?> deletePrescription(
+            @PathVariable String prescriptionId,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: deletePrescription returns ResponseEntity
+            ResponseEntity<Map<String, String>> result = prescriptionService.deletePrescription(prescriptionId);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting prescription: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get prescriptions by patient ID
+     */
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<?> getPrescriptionsByPatientId(
+            @PathVariable String patientId,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: getPrescriptionsByPatientId returns ResponseEntity
+            ResponseEntity<Map<String, Object>> result = prescriptionService.getPrescriptionsByPatientId(patientId);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving prescriptions by patient: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get prescriptions by doctor ID
+     */
+    @GetMapping("/doctor")
+    public ResponseEntity<?> getPrescriptionsByDoctorId(
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: getPrescriptionsByDoctorId returns ResponseEntity
+            ResponseEntity<Map<String, Object>> result = prescriptionService.getPrescriptionsByDoctorId(null);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving prescriptions by doctor: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Search prescriptions by medication name
+     */
+    @GetMapping("/search")
+    public ResponseEntity<?> searchPrescriptionsByMedication(
+            @RequestParam String medicationName,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: searchPrescriptionsByMedication returns ResponseEntity
+            ResponseEntity<Map<String, Object>> result = prescriptionService.searchPrescriptionsByMedication(medicationName);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error searching prescriptions: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check if prescription exists for appointment
+     */
+    @GetMapping("/exists/{appointmentId}")
+    public ResponseEntity<?> checkPrescriptionExists(
+            @PathVariable Long appointmentId,
+            @RequestHeader("Authorization") String token) {
+        
+        String cleanToken = extractTokenFromHeader(token);
+        ResponseEntity<Map<String, String>> tokenValidation = service.validateToken(cleanToken, "doctor");
+        if (tokenValidation.getStatusCode() != HttpStatus.OK) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid or expired token. Access denied.");
+        }
+        
+        try {
+            // FIXED: checkPrescriptionExists returns ResponseEntity
+            ResponseEntity<Map<String, Object>> result = prescriptionService.checkPrescriptionExists(appointmentId);
+            return result;
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error checking prescription existence: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Helper method to extract token from Authorization header
+     */
+    private String extractTokenFromHeader(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return authHeader; // Return as-is if no Bearer prefix
     }
 }
