@@ -17,26 +17,26 @@ public class DashboardController {
     @Autowired
     private Service service;
 
+    // ADD THIS METHOD - Root mapping for "/"
+    @GetMapping("/")
+    public String index() {
+        return "redirect:/index.html"; // This will look for index.html in templates folder
+    }
+
+    
     /**
      * Handles HTTP GET requests to /adminDashboard/{token}
      * Validates admin token and returns appropriate view or redirect
-     * 
-     * @param token The access token from the URL path
-     * @return admin dashboard view if token is valid, redirect to login if invalid
      */
     @GetMapping("/adminDashboard/{token}")
     public String adminDashboard(@PathVariable String token) {
-        // FIXED: Handle ResponseEntity properly
         ResponseEntity<Map<String, String>> validationResponse = service.validateToken(token, "admin");
         
-        // If the token is valid (status code is OK and no errors in response)
         if (validationResponse.getStatusCode() == HttpStatus.OK && 
             validationResponse.getBody() != null && 
             !validationResponse.getBody().containsKey("error")) {
-            // Forward the user to the "admin/adminDashboard" view
             return "admin/adminDashboard";
         } else {
-            // If invalid, redirects to the root URL, likely the login or home page
             return "redirect:/";
         }
     }
@@ -44,23 +44,16 @@ public class DashboardController {
     /**
      * Handles HTTP GET requests to /doctorDashboard/{token}
      * Validates doctor token and returns appropriate view or redirect
-     * 
-     * @param token The access token from the URL path
-     * @return doctor dashboard view if token is valid, redirect to login if invalid
      */
     @GetMapping("/doctorDashboard/{token}")
     public String doctorDashboard(@PathVariable String token) {
-        // FIXED: Handle ResponseEntity properly
         ResponseEntity<Map<String, String>> validationResponse = service.validateToken(token, "doctor");
         
-        // If the token is valid
         if (validationResponse.getStatusCode() == HttpStatus.OK && 
             validationResponse.getBody() != null && 
             !validationResponse.getBody().containsKey("error")) {
-            // Forward the user to the "doctor/doctorDashboard" view
             return "doctor/doctorDashboard";
         } else {
-            // If the token is invalid, redirect to the root URL
             return "redirect:/";
         }
     }
@@ -68,23 +61,16 @@ public class DashboardController {
     /**
      * Handles HTTP GET requests to /patientDashboard/{token}
      * Validates patient token and returns appropriate view or redirect
-     * 
-     * @param token The access token from the URL path
-     * @return patient dashboard view if token is valid, redirect to login if invalid
      */
     @GetMapping("/patientDashboard/{token}")
     public String patientDashboard(@PathVariable String token) {
-        // FIXED: Handle ResponseEntity properly
         ResponseEntity<Map<String, String>> validationResponse = service.validateToken(token, "patient");
         
-        // If the token is valid
         if (validationResponse.getStatusCode() == HttpStatus.OK && 
             validationResponse.getBody() != null && 
             !validationResponse.getBody().containsKey("error")) {
-            // Forward the user to the "patient/patientDashboard" view
             return "patient/patientDashboard";
         } else {
-            // If the token is invalid, redirect to the root URL
             return "redirect:/";
         }
     }
@@ -94,7 +80,6 @@ public class DashboardController {
      */
     @GetMapping("/dashboard/{token}")
     public String dashboard(@PathVariable String token) {
-        // Try to validate for different roles
         ResponseEntity<Map<String, String>> adminResponse = service.validateToken(token, "admin");
         if (adminResponse.getStatusCode() == HttpStatus.OK && 
             adminResponse.getBody() != null && 
@@ -116,16 +101,15 @@ public class DashboardController {
             return "patient/patientDashboard";
         }
 
-        // If no valid role found, redirect to login
         return "redirect:/";
     }
 
     /**
-     * Login page
+     * Login page - you can remove this if you use the index() method above
      */
-    @GetMapping("/")
-    public String login() {
-        return "login";
+    @GetMapping("/login")
+    public String login() {        
+        return "redirect:/index.html";
     }
 
     /**
@@ -135,4 +119,15 @@ public class DashboardController {
     public String home() {
         return "redirect:/";
     }
+    // Public access endpoints for role selection
+    @GetMapping("/adminAccess")
+    public String adminAccess() {
+        return "admin/adminDashboard";
+    }
+
+    @GetMapping("/doctorAccess") 
+    public String doctorAccess() {
+        return "doctor/doctorDashboard";
+    }
+     
 }

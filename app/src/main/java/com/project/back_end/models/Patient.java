@@ -2,20 +2,15 @@ package com.project.back_end.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -54,50 +49,9 @@ public class Patient {
     @Column(name = "address", nullable = false, length = 255)
     private String address;
 
-    @Column(name = "date_of_birth")
-    private java.time.LocalDate dateOfBirth;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "gender", length = 10)
-    private Gender gender;
-
-    @Column(name = "emergency_contact_name", length = 100)
-    private String emergencyContactName;
-
-    @Pattern(regexp = "\\d{12}", message = "Emergency contact phone must be exactly 12 digits")
-    @Column(name = "emergency_contact_phone", length = 12)
-    private String emergencyContactPhone;
-
-    @Column(name = "insurance_provider", length = 100)
-    private String insuranceProvider;
-
-    @Column(name = "insurance_number", length = 50)
-    private String insuranceNumber;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    // Gender enum for better type safety
-    public enum Gender {
-        MALE, FEMALE, OTHER
-    }
-
-    // Default constructor
-    public Patient() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.isActive = true;
-    }
 
     // Parameterized constructor for required fields
     public Patient(String name, String email, String password, String phone, String address) {
-        this();
         this.name = name;
         this.email = email;
         this.password = password;
@@ -107,14 +61,6 @@ public class Patient {
 
     // Business logic methods
     @Transient
-    public int getAge() {
-        if (dateOfBirth != null) {
-            return java.time.Period.between(dateOfBirth, java.time.LocalDate.now()).getYears();
-        }
-        return 0;
-    }
-
-    @Transient
     public String getFormattedPhone() {
         if (phone != null && phone.length() == 10) {
             return "(" + phone.substring(0, 3) + ") " + phone.substring(3, 6) + "-" + phone.substring(6);
@@ -123,37 +69,8 @@ public class Patient {
     }
 
     @Transient
-    public String getFormattedEmergencyContactPhone() {
-        if (emergencyContactPhone != null && emergencyContactPhone.length() == 10) {
-            return "(" + emergencyContactPhone.substring(0, 3) + ") " + 
-                   emergencyContactPhone.substring(3, 6) + "-" + 
-                   emergencyContactPhone.substring(6);
-        }
-        return emergencyContactPhone;
-    }
-
-    @Transient
     public String getSummary() {
         return String.format("%s (%s)", name, email);
-    }
-
-    @Transient
-    public boolean hasInsurance() {
-        return insuranceProvider != null && !insuranceProvider.trim().isEmpty();
-    }
-
-    // PrePersist and PreUpdate methods for timestamps
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 
     // Getters and setters
@@ -205,77 +122,6 @@ public class Patient {
         this.address = address;
     }
 
-    public java.time.LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(java.time.LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public Gender getGender() {
-        return gender;
-    }
-
-    public void setGender(Gender gender) {
-        this.gender = gender;
-    }
-
-    public String getEmergencyContactName() {
-        return emergencyContactName;
-    }
-
-    public void setEmergencyContactName(String emergencyContactName) {
-        this.emergencyContactName = emergencyContactName;
-    }
-
-    public String getEmergencyContactPhone() {
-        return emergencyContactPhone;
-    }
-
-    public void setEmergencyContactPhone(String emergencyContactPhone) {
-        this.emergencyContactPhone = emergencyContactPhone;
-    }
-
-    public String getInsuranceProvider() {
-        return insuranceProvider;
-    }
-
-    public void setInsuranceProvider(String insuranceProvider) {
-        this.insuranceProvider = insuranceProvider;
-    }
-
-    public String getInsuranceNumber() {
-        return insuranceNumber;
-    }
-
-    public void setInsuranceNumber(String insuranceNumber) {
-        this.insuranceNumber = insuranceNumber;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     // toString method (excludes password for security)
     @Override
@@ -284,8 +130,7 @@ public class Patient {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
-                ", isActive=" + isActive +
+                ", phone='" + phone + '\'' +                
                 '}';
     }
 
@@ -303,10 +148,5 @@ public class Patient {
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
-    }
-
-    public Object getRegistrationDate() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRegistrationDate'");
     }
 }

@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore; // ← ADD THIS IMPORT
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
@@ -60,6 +60,7 @@ public class Doctor {
         joinColumns = @JoinColumn(name = "doctor_id")
     )
     @Column(name = "available_times", nullable = false, length = 20)
+    @JsonIgnore // ← ADD THIS ANNOTATION to prevent serialization
     private List<String> availableTimes = new ArrayList<>();
 
     

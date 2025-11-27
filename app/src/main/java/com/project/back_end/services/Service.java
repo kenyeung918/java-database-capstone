@@ -176,33 +176,35 @@ public class Service {
      * Validates patient login credentials
      */
     public ResponseEntity<Map<String, String>> validatePatientLogin(Login login) {
-        Map<String, String> response = new HashMap<>();
-        
-        try {
-            Patient patient = patientRepository.findByEmail(login.getEmail());
-            
-            if (patient == null) {
-                response.put("error", "Patient not found");
-                return ResponseEntity.status(401).body(response);
-            }
-            
-            if (!patient.getPassword().equals(login.getPassword())) {
-                response.put("error", "Invalid password");
-                return ResponseEntity.status(401).body(response);
-            }
-            
-            String token = tokenService.generateToken(patient.getEmail());
-            response.put("token", token);
-            response.put("message", "Login successful");
-            response.put("patientId", patient.getId().toString());
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            response.put("error", "Login failed: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
-        }
-    }
+    Map<String, String> response = new HashMap<>();
+    
+    try {
+        // FIXED: Change login.getEmail() to login.getIdentifier()
+        Patient patient = patientRepository.findByEmail(login.getEmail()); // ← FIXED LINE
 
+        if (patient == null) {
+            response.put("error", "Patient not found");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        if (!patient.getPassword().equals(login.getPassword())) {
+            response.put("error", "Invalid password");
+            return ResponseEntity.status(401).body(response);
+        }
+        
+        String token = tokenService.generateToken(patient.getEmail());
+        response.put("token", token);
+        response.put("message", "Login successful");
+        response.put("patientId", patient.getId().toString());
+        return ResponseEntity.ok(response);
+        
+    } catch (Exception e) {
+        response.put("error", "Login failed: " + e.getMessage());
+        return ResponseEntity.status(500).body(response);
+    }
+}
+
+    
 
     /**
      * Filters patient appointments based on condition and doctor name

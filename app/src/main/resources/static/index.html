@@ -1,5 +1,3 @@
-<html>
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,19 +22,19 @@
                 <h1 class="role-selection-heading">Select Your Role</h1>
                 
                 <div class="role-buttons-container">
-                    <button class="role-btn admin-btn" onclick="handleRoleSelection('ADMIN')">
+                    <button class="role-btn admin-btn" onclick="handleRoleSelection('admin')">
                         <span class="role-icon">👨‍💼</span>
                         <span class="role-text">Administrator</span>
                         <span class="role-description">Manage users and system operations</span>
                     </button>
                     
-                    <button class="role-btn doctor-btn" onclick="handleRoleSelection('DOCTOR')">
+                    <button class="role-btn doctor-btn" onclick="handleRoleSelection('doctor')">
                         <span class="role-icon">👨‍⚕️</span>
                         <span class="role-text">Doctor</span>
                         <span class="role-description">Manage appointments and patients</span>
                     </button>
                     
-                    <button class="role-btn patient-btn" onclick="handleRoleSelection('PATIENT')">
+                    <button class="role-btn patient-btn" onclick="handleRoleSelection('patient')">
                         <span class="role-icon">👤</span>
                         <span class="role-text">Patient</span>
                         <span class="role-description">Book appointments and view records</span>
@@ -58,6 +56,42 @@
         </div>
     </div>
 
+    <!-- Add this script directly to ensure it loads -->
+    <script>
+        // Role selection handler
+        function handleRoleSelection(role) {
+            console.log('Role selected:', role);
+            
+            // Store role in localStorage
+            localStorage.setItem('userRole', role);
+            
+            // Redirect based on role
+            switch (role) {
+                case 'admin':
+                    window.location.href = '/adminAccess';
+                    break;
+                case 'doctor':
+                    window.location.href = '/doctorAccess';
+                    break;
+                case 'patient':                    
+                    window.location.href = '/pages/patientDashboard.html';
+                    break;
+                default:
+                    console.log('Unknown role:', role);
+                    window.location.href = '/';
+            }
+        }
+        
+        // Modal functions
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+        
+        // Make functions globally available
+        window.handleRoleSelection = handleRoleSelection;
+        window.closeModal = closeModal;
+    </script>
+    
     <script type="module" src="../js/index.js" defer></script>
 </body>
 </html>

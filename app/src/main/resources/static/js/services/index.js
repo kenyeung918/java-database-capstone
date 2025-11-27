@@ -137,13 +137,16 @@ function selectRole(role) {
     localStorage.setItem('userRole', role);
     console.log(`User role set to: ${role}`);
     
-    // Redirect to appropriate dashboard based on role
+    // Redirect to public access endpoints
     switch (role) {
         case 'admin':
-            window.location.href = '/pages/adminDashboard.html';
+            window.location.href = '/adminAccess';
             break;
         case 'doctor':
-            window.location.href = '/pages/doctorDashboard.html';
+            window.location.href = '/doctorAccess';
+            break;
+        case 'patient':
+            window.location.href = '/patientAccess';
             break;
         default:
             console.log('Unknown role:', role);

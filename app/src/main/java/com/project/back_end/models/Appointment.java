@@ -8,8 +8,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Future;
@@ -45,35 +43,17 @@ public class Appointment {
     @Column(nullable = false)
     private Integer status; // 0 = SCHEDULED, 1 = COMPLETED, 2 = CANCELLED, 3 = NO_SHOW
 
-    @Column(length = 500)
-    private String notes;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    // Status constants for better code readability
+     // Status constants for better code readability
     public static final int STATUS_SCHEDULED = 0;
     public static final int STATUS_COMPLETED = 1;
     public static final int STATUS_CANCELLED = 2;
     public static final int STATUS_NO_SHOW = 3;
 
-    // Default constructor
-    public Appointment() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.status = STATUS_SCHEDULED; // Default status
-    }
-
-    // Parameterized constructor
-    public Appointment(Doctor doctor, Patient patient, LocalDateTime appointmentTime, String notes) {
-        this();
+     // Parameterized constructor
+    public Appointment(Doctor doctor, Patient patient, LocalDateTime appointmentTime, String notes) { 
         this.doctor = doctor;
         this.patient = patient;
-        this.appointmentTime = appointmentTime;
-        this.notes = notes;
+        this.appointmentTime = appointmentTime;        
     }
 
     // Helper method: Calculate end time (1 hour after start time)
@@ -132,20 +112,6 @@ public class Appointment {
                appointmentTime.isAfter(LocalDateTime.now().plusHours(2)); // Can cancel if more than 2 hours before
     }
 
-    // PrePersist and PreUpdate methods
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     // Getters and setters
     public Long getId() {
         return id;
@@ -185,30 +151,6 @@ public class Appointment {
 
     public void setStatus(Integer status) {
         this.status = status;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     // toString method
